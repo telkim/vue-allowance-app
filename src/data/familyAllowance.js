@@ -12,6 +12,40 @@ export const familyProfile = Object.freeze({
   rules: ['약속한 미션은 스스로 확인한다.', '보상보다 정직을 먼저 생각한다.', '제안은 구체적으로 적는다.']
 })
 
+export const accountPresets = Object.freeze([
+  {
+    email: 'hunam@family.com',
+    name: '훈남',
+    role: 'parent'
+  },
+  {
+    email: 'spring@family.com',
+    name: '봄이',
+    role: 'child'
+  },
+  {
+    email: 'summer@family.com',
+    name: '여름이',
+    role: 'child'
+  }
+])
+
+export const levelSystem = Object.freeze({
+  bronze: { name: '브론즈 효도러', minPoints: 0, badge: '🥉' },
+  silver: { name: '실버 용돈 장인', minPoints: 3000, badge: '🥈' },
+  gold: { name: '골드 가문의 영광', minPoints: 10000, badge: '🥇' }
+})
+
+export function getUserLevel(totalPoints) {
+  let currentLevel = levelSystem.bronze
+  for (const [key, level] of Object.entries(levelSystem)) {
+    if (totalPoints >= level.minPoints) {
+      currentLevel = level
+    }
+  }
+  return currentLevel
+}
+
 export const rewardTypes = Object.freeze({
   CASH: 'cash',
   POINT: 'point'
@@ -36,11 +70,38 @@ export const rewardLabels = Object.freeze({
 
 const today = '2026-06-27'
 
+export const settlementSchedule = Object.freeze({
+  type: 'weekly',
+  dayOfWeek: 6,
+  nextSettlementDate: '2026-07-05'
+})
+
+export function calculateDDay(targetDate) {
+  const todayDate = new Date(today)
+  const target = new Date(targetDate)
+  const diffTime = target - todayDate
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+  return diffDays > 0 ? diffDays : 0
+}
+
 export const initialFamilyState = Object.freeze({
   mode: 'parent',
   honestyPledgeDone: false,
   cashBalance: 14000,
   pointBalance: 2200,
+  user: null,
+  isAuthenticated: false,
+  showSettings: false,
+  showMottoes: true,
+  timeline: Object.freeze([
+    {
+      id: 'timeline-001',
+      author: '시스템',
+      content: '똘똘이가 방 청소 미션을 완료했어요! 칭찬해 주세요! 🎉',
+      timestamp: `${today}T10:30:00.000Z`,
+      type: 'mission_complete'
+    }
+  ]),
   missions: Object.freeze([
     {
       id: 'mission-daily-honesty',
@@ -369,5 +430,49 @@ export function toggleHonestyPledge(state) {
   return {
     ...state,
     honestyPledgeDone: !state.honestyPledgeDone
+  }
+}
+
+export function addTimelineEntry(state, entry) {
+  const newEntry = {
+    id: createId('timeline'),
+    timestamp: new Date().toISOString(),
+    ...entry
+  }
+  return {
+    ...state,
+    timeline: [newEntry, ...state.timeline]
+  }
+}
+
+export function toggleMottoes(state) {
+  return {
+    ...state,
+    showMottoes: !state.showMottoes
+  }
+}
+
+export function toggleSettings(state) {
+  return {
+    ...state,
+    showSettings: !state.showSettings
+  }
+}
+
+export function setUser(state, user) {
+  return {
+    ...state,
+    user,
+    isAuthenticated: !!user,
+    mode: user?.user_metadata?.role || 'parent'
+  }
+}
+
+export function logout(state) {
+  return {
+    ...state,
+    user: null,
+    isAuthenticated: false,
+    mode: 'parent'
   }
 }
